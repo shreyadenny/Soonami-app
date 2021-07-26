@@ -17,6 +17,7 @@ package com.example.android.soonami;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.TextView;
 import android.Manifest;
@@ -167,10 +168,16 @@ public class MainActivity extends AppCompatActivity {
                 urlConnection.setReadTimeout(10000 /* milliseconds */);
                 urlConnection.setConnectTimeout(15000 /* milliseconds */);
                 urlConnection.connect();
-                inputStream = urlConnection.getInputStream();
-                jsonResponse = readFromStream(inputStream);
+                if(urlConnection.getResponseCode() == 200) {
+                    inputStream = urlConnection.getInputStream();
+                    jsonResponse = readFromStream(inputStream);
+                }
+                else{
+                    Log.e(LOG_TAG, "Error response code: " + urlConnection.getResponseCode());
+                }
             } catch (IOException e) {
                 // TODO: Handle the exception
+                Log.e(LOG_TAG, "Problem retrieving the earthquake JSON results.", e);
             } finally {
                 if (urlConnection != null) {
                     urlConnection.disconnect();
@@ -206,6 +213,10 @@ public class MainActivity extends AppCompatActivity {
          * about the first earthquake from the input earthquakeJSON string.
          */
         private Event extractFeatureFromJson(String earthquakeJSON) {
+            if(TextUtils.isEmpty(earthquakeJSON)){
+                return null;
+
+            }
             try {
                 JSONObject baseJsonResponse = new JSONObject(earthquakeJSON);
                 JSONArray featureArray = baseJsonResponse.getJSONArray("features");
